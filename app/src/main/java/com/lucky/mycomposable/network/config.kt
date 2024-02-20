@@ -1,9 +1,13 @@
 package com.lucky.mycomposable.network
 
 import android.util.Log
+import com.lucky.mycomposable.network.Constants.BASE
+import com.lucky.mycomposable.utils.FormattedNetworkClientException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.features.DefaultRequest
+import io.ktor.client.features.HttpResponseValidator
+import io.ktor.client.features.defaultRequest
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.features.logging.LogLevel
@@ -11,6 +15,7 @@ import io.ktor.client.features.logging.Logger
 import io.ktor.client.features.logging.Logging
 import io.ktor.client.features.observer.ResponseObserver
 import io.ktor.client.request.header
+import io.ktor.client.request.url
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 
@@ -19,7 +24,9 @@ object Constants{
 
 }
 
-class RestApiBuilder(private val s:String): ApiBuilder() {
+class RestApiBuilder(): ApiBuilder() {
+
+
 
     val api = HttpClient(Android){
 
@@ -35,6 +42,7 @@ class RestApiBuilder(private val s:String): ApiBuilder() {
                 socketTimeout = TIME_OUT
             }
         }
+        expectSuccess = true
 
         install(Logging){
             logger = object :Logger{
@@ -45,18 +53,32 @@ class RestApiBuilder(private val s:String): ApiBuilder() {
             level = LogLevel.ALL
         }
 
+        HttpResponseValidator {
+            handleResponseException {
+                throw FormattedNetworkClientException(it.localizedMessage ?: "Unknown Error")
+            }
+        }
+
         install(ResponseObserver){
             onResponse {
                 Log.v(TAG, "Kotr response : ${it.status.value}")
             }
         }
 
+//        defaultRequest {
+////            url("${BASE}")
+//            header(HttpHeaders.ContentType,ContentType.Application.Json)
+////            if (token.isNotEmpty()) {
+////                header(AUTHORIZATION, token)
+////            }
+//        }
+
         // handle exception
 
 
-        install(DefaultRequest){
-            header(HttpHeaders.ContentType,ContentType.Application.Json)
-        }
+//        install(DefaultRequest){
+//            header(HttpHeaders.ContentType,ContentType.Application.Json)
+//        }
 
     }
 
@@ -64,7 +86,6 @@ class RestApiBuilder(private val s:String): ApiBuilder() {
 
 private const val TIME_OUT = 60_000
 private const val TAG = "config"
-/*
 val ktorHttpClient = HttpClient(Android){
 
     install(JsonFeature){
@@ -102,4 +123,4 @@ val ktorHttpClient = HttpClient(Android){
         header(HttpHeaders.ContentType,ContentType.Application.Json)
     }
 
-}*/
+}

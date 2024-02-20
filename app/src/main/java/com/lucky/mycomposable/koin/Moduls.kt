@@ -12,9 +12,12 @@ val viewModelsModule = module {
 }
 
 val networkModule = module {
-    single { RestApiBuilder(get()) }
+    single { RestApiBuilder() }
 }
 
-val accountModule = module {
-    single<PhotoRepository> {PhotosRepositoryImpl(get())}
+val appModule = module {
+    single<PhotoRepository> { PhotosRepositoryImpl(get())}
+
+//    factory<PhotoRepository> {(PhotosRepositoryImpl(get()))}
+
 }
